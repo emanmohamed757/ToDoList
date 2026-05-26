@@ -20,6 +20,14 @@ namespace ToDoList.Core.Models.Data.Entities
         // Also because I wanted to learn its implementation.
         public string MaterializedPath { get; set; }
 
+        /// <summary>
+        /// Level of depth at which the ToDo resides in the materialized path.
+        /// </summary>
+        /// <remarks>
+        /// For example, in this path "/1/4/7/8/" the level is 4.
+        /// </remarks>
+        public int Level { get; set; }
+
         public string Title { get; set; }
 
         /// <summary>

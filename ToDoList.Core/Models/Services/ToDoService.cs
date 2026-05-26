@@ -28,6 +28,10 @@ namespace ToDoList.Core.Models.Services
             _logger = Log.Logger.ForContext<ToDoService>();
         }
 
+        /// <summary>
+        /// Gets the immediate children ToDos that reside in a given path.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public Result<List<ToDo>> GetToDos(string parentPath)
         {
             if (string.IsNullOrEmpty(parentPath))
@@ -37,8 +41,12 @@ namespace ToDoList.Core.Models.Services
 
             using (var dbContext = new MainDbContext())
             {
+                // The number of slashes in the parent path equals the level of the
+                // children due to leading and trailing slashes.
+                int level = parentPath.Count(c => c == '/');
                 List<ToDo> toDos = dbContext.ToDos
-                    .Where(toDo => toDo.MaterializedPath.StartsWith(parentPath))
+                    .Where(toDo => toDo.MaterializedPath.StartsWith(parentPath)
+                        && toDo.Level == level)
                     .ToList();
 
                 _logger.Information("{ToDoCount} ToDos retrieved.", toDos.Count);
@@ -80,6 +88,9 @@ namespace ToDoList.Core.Models.Services
 
                     // The ID is set after the first SaveChanges call and is used to build the MaterializedPath.
                     toDo.MaterializedPath = $"{toDoDto.MaterializedPathOfParent}/{toDo.Id}/";
+                    // The number of slashes in the parent path equals the level of the
+                    // children due to leading and trailing slashes.
+                    toDo.Level = toDoDto.MaterializedPathOfParent.Count(c => c == '/');
                     dbContext.SaveChanges();
                     transaction.Commit();
                 }
@@ -161,6 +172,7 @@ namespace ToDoList.Core.Models.Services
 
                 string oldPath = toDo.MaterializedPath;
                 toDo.MaterializedPath = $"{newParentMaterializedPath}/{toDo.Id}/";
+                toDo.Level = newParentMaterializedPath.Count(c => c == '/');
 
                 // The materialized parentPath of all descendants will change.
                 List<ToDo> descendants = GetAllDescendants(toDo);

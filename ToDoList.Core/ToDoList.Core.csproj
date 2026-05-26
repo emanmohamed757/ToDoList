@@ -238,6 +238,10 @@
     <Compile Include="Models\Data\Migrations\202605261443028_RemoveIdFromTag.Designer.cs">
       <DependentUpon>202605261443028_RemoveIdFromTag.cs</DependentUpon>
     </Compile>
+    <Compile Include="Models\Data\Migrations\202605261724557_AddLevelToToDo.cs" />
+    <Compile Include="Models\Data\Migrations\202605261724557_AddLevelToToDo.Designer.cs">
+      <DependentUpon>202605261724557_AddLevelToToDo.cs</DependentUpon>
+    </Compile>
     <Compile Include="Models\Data\Migrations\Configuration.cs" />
     <Compile Include="Models\Data\Entities\IAuditable.cs" />
     <Compile Include="Models\Data\Entities\IDeletable.cs" />
@@ -363,6 +367,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Models\Data\Migrations\202605261443028_RemoveIdFromTag.resx">
       <DependentUpon>202605261443028_RemoveIdFromTag.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Models\Data\Migrations\202605261724557_AddLevelToToDo.resx">
+      <DependentUpon>202605261724557_AddLevelToToDo.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
