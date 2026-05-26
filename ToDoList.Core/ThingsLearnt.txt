@@ -2,3 +2,4 @@
 * .WriteTo.File(new JsonFormatter()
 * Serilog.Exceptions
 * Need to cut out enrichers by finding what we actually query.
+* Result return type is not needed if the method has no use for it. Void fits better.

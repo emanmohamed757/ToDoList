@@ -234,6 +234,10 @@
     <Compile Include="Models\Data\Migrations\202605261052144_MakeCompletedOnDateNullable.Designer.cs">
       <DependentUpon>202605261052144_MakeCompletedOnDateNullable.cs</DependentUpon>
     </Compile>
+    <Compile Include="Models\Data\Migrations\202605261443028_RemoveIdFromTag.cs" />
+    <Compile Include="Models\Data\Migrations\202605261443028_RemoveIdFromTag.Designer.cs">
+      <DependentUpon>202605261443028_RemoveIdFromTag.cs</DependentUpon>
+    </Compile>
     <Compile Include="Models\Data\Migrations\Configuration.cs" />
     <Compile Include="Models\Data\Entities\IAuditable.cs" />
     <Compile Include="Models\Data\Entities\IDeletable.cs" />
@@ -242,9 +246,9 @@
     <Compile Include="Models\Data\Entities\Tag.cs" />
     <Compile Include="Models\Data\Entities\ToDo.cs" />
     <Compile Include="Models\Data\MainDbContext.cs" />
-    <Compile Include="Models\Dtos\TagDto.cs" />
     <Compile Include="Models\Dtos\ToDoCreationDto.cs" />
     <Compile Include="Models\Dtos\ToDoDto.cs" />
+    <Compile Include="Models\Dtos\ToDoUpdateDto.cs" />
     <Compile Include="Models\ExtensionMethods\Mapper.cs" />
     <Compile Include="Models\Services\ToDoService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -356,6 +360,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Models\Data\Migrations\202605261052144_MakeCompletedOnDateNullable.resx">
       <DependentUpon>202605261052144_MakeCompletedOnDateNullable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Models\Data\Migrations\202605261443028_RemoveIdFromTag.resx">
+      <DependentUpon>202605261443028_RemoveIdFromTag.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ToDoList.Core.Models.Data.Entities;
@@ -13,24 +14,14 @@ namespace ToDoList.Core.Models.ExtensionMethods
         /// </summary>
         public static ToDo ToToDo(this ToDoCreationDto dto)
         {
+            Log.Logger.Debug("Mapping ToDoCreationDto to ToDo.");
+
             return new ToDo
             {
                 Title = dto.Title,
                 Description = dto.Description,
                 CompletedOn = dto.CompletedOn,
                 StatusId = dto.StatusId,
-                Tags = dto.Tags?.Select(tagDto => tagDto.ToTag()).ToList(),
-            };
-        }
-
-        /// <summary>
-        /// Converts <see cref="TagDto"> to <see cref="Tag">
-        /// </summary>
-        private static Tag ToTag(this TagDto tag)
-        {
-            return new Tag
-            {
-                Name = tag.Name,
             };
         }
     }

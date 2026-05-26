@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ToDoList.Core.Models.Dtos;
 
 namespace ToDoList.Core.Models.Data.Entities
 {
@@ -34,8 +35,6 @@ namespace ToDoList.Core.Models.Data.Entities
 
         public virtual ICollection<Tag> Tags { get; set; }
 
-        //public List<ToDo> SubToDos { get; set; } Maybe this is not necessary because the calling code could query for it from the DB.
-
         // --- Interface properties.
         public DateTime CreatedOn { get; set; }
 
@@ -46,5 +45,13 @@ namespace ToDoList.Core.Models.Data.Entities
         public string UpdatedBy { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        public void Update(ToDoUpdateDto update)
+        {
+            Title = update.Title;
+            Description = update.Description;
+            CompletedOn = update.CompletedOn;
+            StatusId = update.StatusId;
+        }
     }
 }
