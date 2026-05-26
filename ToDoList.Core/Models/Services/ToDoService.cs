@@ -20,6 +20,8 @@ namespace ToDoList.Core.Models.Services
         /// </summary>
         public ToDoService()
         {
+            // Decided to not do dependency injection for this, as this project will not have tests,
+            // and I will not use any other logging library.
             _logger = Log.Logger.ForContext<ToDoService>();
         }
 

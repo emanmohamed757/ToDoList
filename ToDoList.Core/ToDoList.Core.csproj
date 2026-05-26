@@ -230,6 +230,10 @@
     <Compile Include="Models\Data\Migrations\202605011358470_SeedStatus.Designer.cs">
       <DependentUpon>202605011358470_SeedStatus.cs</DependentUpon>
     </Compile>
+    <Compile Include="Models\Data\Migrations\202605261052144_MakeCompletedOnDateNullable.cs" />
+    <Compile Include="Models\Data\Migrations\202605261052144_MakeCompletedOnDateNullable.Designer.cs">
+      <DependentUpon>202605261052144_MakeCompletedOnDateNullable.cs</DependentUpon>
+    </Compile>
     <Compile Include="Models\Data\Migrations\Configuration.cs" />
     <Compile Include="Models\Data\Entities\IAuditable.cs" />
     <Compile Include="Models\Data\Entities\IDeletable.cs" />
@@ -349,6 +353,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Models\Data\Migrations\202605011358470_SeedStatus.resx">
       <DependentUpon>202605011358470_SeedStatus.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Models\Data\Migrations\202605261052144_MakeCompletedOnDateNullable.resx">
+      <DependentUpon>202605261052144_MakeCompletedOnDateNullable.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
