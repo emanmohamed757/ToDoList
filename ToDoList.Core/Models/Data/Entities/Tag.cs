@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace ToDoList.Core.Models.Data.Entities
 {
     public class Tag : IAuditable, IDeletable
     {
-        public int Id { get; set; }
-
+        [Key]
         public string Name { get; set; }
 
         public virtual ICollection<ToDo> ToDos { get; set; }
