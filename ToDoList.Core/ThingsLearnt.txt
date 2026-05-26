@@ -1,2 +1,4 @@
 * All decisions must be documented, whether in XML comments or elsewhere.
 * .WriteTo.File(new JsonFormatter()
+* Serilog.Exceptions
+* Need to cut out enrichers by finding what we actually query.

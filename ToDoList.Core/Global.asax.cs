@@ -1,4 +1,5 @@
 ﻿using Serilog;
+using Serilog.Exceptions;
 using Serilog.Formatting.Json;
 using SerilogWeb.Classic.Enrichers;
 using System.Web.Http;
@@ -30,6 +31,8 @@ namespace ToDoList.Core
                 .Enrich.WithUserName()
                 .Enrich.WithWebApiActionName()
                 .Enrich.WithWebApiControllerName()
+                .Enrich.WithMachineName()
+                .Enrich.WithExceptionDetails()
                 .CreateLogger();
         }
     }
