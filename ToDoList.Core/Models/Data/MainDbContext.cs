@@ -15,7 +15,5 @@ namespace ToDoList.Core.Models.Data
          public virtual DbSet<Tag> Tags { get; set; }
 
         public virtual DbSet<Status> Statuses { get; set; }
-
-        public virtual DbSet<Notebook> Notebooks { get; set; }
     }
 }

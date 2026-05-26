@@ -1,0 +1,1 @@
+* Decided to remove Notebook entity because a ToDo can act as a notebook by containing sub ToDos.

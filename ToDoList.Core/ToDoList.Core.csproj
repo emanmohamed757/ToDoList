@@ -237,7 +237,6 @@
     <Compile Include="Models\Data\Migrations\Configuration.cs" />
     <Compile Include="Models\Data\Entities\IAuditable.cs" />
     <Compile Include="Models\Data\Entities\IDeletable.cs" />
-    <Compile Include="Models\Data\Entities\Notebook.cs" />
     <Compile Include="Models\Data\Entities\Status.cs" />
     <Compile Include="Models\Data\Entities\StatusOption.cs" />
     <Compile Include="Models\Data\Entities\Tag.cs" />
@@ -268,6 +267,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
+    <Content Include="Decisions.txt" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Scripts\bootstrap.bundle.js" />
