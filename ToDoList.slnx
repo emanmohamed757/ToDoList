@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ToDoList.Core/ToDoList.Core.csproj" Id="6ad1c12e-350c-4d75-a583-0bc2c8ea9e50" />
+  <Project Path="ToDoList.Web/ToDoList.Web.csproj" Id="94ba0469-dfdc-45e7-8392-a720d249976b" />
+</Solution>
