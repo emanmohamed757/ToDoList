@@ -28,6 +28,25 @@ namespace ToDoList.Core.Models.Services
             _logger = Log.Logger.ForContext<ToDoService>();
         }
 
+        public Result<List<ToDo>> GetToDos(string parentPath)
+        {
+            if (string.IsNullOrEmpty(parentPath))
+            {
+                throw new ArgumentNullException(nameof(parentPath), $"{nameof(parentPath)} is required.");
+            }
+
+            using (var dbContext = new MainDbContext())
+            {
+                List<ToDo> toDos = dbContext.ToDos
+                    .Where(toDo => toDo.MaterializedPath.StartsWith(parentPath))
+                    .ToList();
+
+                _logger.Information("{ToDoCount} ToDos retrieved.", toDos.Count);
+
+                return toDos;
+            }
+        }
+
         /// <summary>
         /// Creates a ToDo item.
         /// </summary>
@@ -127,6 +146,35 @@ namespace ToDoList.Core.Models.Services
 
             _logger.ForContext("ToDo", toDo)
                 .Information("ToDo deleted.");
+            return Result.Ok();
+        }
+
+        public Result MoveToDo(int toDoBeingMovedId, string newParentMaterializedPath)
+        {
+            ToDo toDo;
+            using (var dbContext = new MainDbContext())
+            {
+                if (!TryFindToDo(toDoBeingMovedId, dbContext, out toDo))
+                {
+                    return Result.Fail("No ToDo found with that ID.");
+                }
+
+                string oldPath = toDo.MaterializedPath;
+                toDo.MaterializedPath = $"{newParentMaterializedPath}/{toDo.Id}/";
+
+                // The materialized parentPath of all descendants will change.
+                List<ToDo> descendants = GetAllDescendants(toDo);
+                descendants.ForEach(descendant =>
+                {
+                    descendant.MaterializedPath.Replace(oldPath, toDo.MaterializedPath);
+                });
+
+                _logger.ForContext("ToDo", toDo)
+                    .Debug("MaterializedPath of {DescendantCount} descendants changed.", descendants.Count);
+            }
+
+            _logger.ForContext("ToDo", toDo)
+                .Information("ToDo moved to {MaterializedPath}.", toDo.MaterializedPath);
             return Result.Ok();
         }
 
