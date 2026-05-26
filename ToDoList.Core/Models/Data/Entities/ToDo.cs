@@ -13,7 +13,7 @@ namespace ToDoList.Core.Models.Data.Entities
 
         public string Description { get; set; }
 
-        public DateTime CompletedOn { get; set; }
+        public DateTime? CompletedOn { get; set; }
 
         public StatusOption StatusId { get; set; }
 
