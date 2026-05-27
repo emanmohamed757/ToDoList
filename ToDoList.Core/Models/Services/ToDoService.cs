@@ -200,7 +200,7 @@ namespace ToDoList.Core.Models.Services
                 List<ToDo> descendants = GetAllDescendants(toDo, dbContext);
                 descendants.ForEach(descendant =>
                 {
-                    descendant.MaterializedPath.Replace(oldPath, toDo.MaterializedPath);
+                    descendant.MaterializedPath = descendant.MaterializedPath.Replace(oldPath, toDo.MaterializedPath);
                 });
 
                 try
