@@ -1,4 +1,5 @@
 ﻿using FluentResults;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -192,15 +193,23 @@ namespace ToDoList.Core.Models.Services
                     return Result.Fail("No ToDo found with that ID.");
                 }
 
+                if (newParentMaterializedPath.StartsWith(toDo.MaterializedPath))
+                {
+                    return Result.Fail("You cannot move a ToDo into one of its own descendants.");
+                }
+
                 string oldPath = toDo.MaterializedPath;
+                int oldLevel = toDo.Level;
+                // The materialized parentPath of all descendants will change. Make sure to get descendants before the path changes.
+                List<ToDo> descendants = GetAllDescendants(toDo, dbContext);
                 toDo.MaterializedPath = $"{newParentMaterializedPath}/{toDo.Id}/";
                 toDo.Level = newParentMaterializedPath.Count(c => c == '/');
 
-                // The materialized parentPath of all descendants will change.
-                List<ToDo> descendants = GetAllDescendants(toDo, dbContext);
+                int levelDelta = toDo.Level - oldLevel; // difference between new and old level
                 descendants.ForEach(descendant =>
                 {
                     descendant.MaterializedPath = descendant.MaterializedPath.Replace(oldPath, toDo.MaterializedPath);
+                    descendant.Level += levelDelta; // this line is missing
                 });
 
                 try
