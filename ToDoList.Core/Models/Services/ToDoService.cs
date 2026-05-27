@@ -1,5 +1,4 @@
 ﻿using FluentResults;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -183,8 +182,20 @@ namespace ToDoList.Core.Models.Services
             return Result.Ok();
         }
 
+        /// <summary>
+        /// Moves a ToDo from one ToDo into another. In other words, changes parent or section.
+        /// </summary>
+        /// <param name="toDoBeingMovedId"></param>
+        /// <param name="newParentMaterializedPath"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public Result MoveToDo(int toDoBeingMovedId, string newParentMaterializedPath)
         {
+            if (string.IsNullOrEmpty(newParentMaterializedPath))
+            {
+                throw new ArgumentNullException(nameof(newParentMaterializedPath), $"{nameof(newParentMaterializedPath)} is required.");
+            }
+
             ToDo toDo;
             using (var dbContext = new MainDbContext())
             {
@@ -202,6 +213,7 @@ namespace ToDoList.Core.Models.Services
                 int oldLevel = toDo.Level;
                 // The materialized parentPath of all descendants will change. Make sure to get descendants before the path changes.
                 List<ToDo> descendants = GetAllDescendants(toDo, dbContext);
+
                 toDo.MaterializedPath = $"{newParentMaterializedPath}/{toDo.Id}/";
                 toDo.Level = newParentMaterializedPath.Count(c => c == '/');
 
@@ -243,6 +255,10 @@ namespace ToDoList.Core.Models.Services
                 .ToList();
         }
 
+        /// <summary>
+        /// Finds a ToDo from the database and if not found, logs it.
+        /// </summary>
+        /// <returns>true if found, otherwise false.</returns>
         private bool TryFindToDo(int id, MainDbContext dbContext, out ToDo toDo)
         {
             toDo = dbContext.ToDos
@@ -257,6 +273,9 @@ namespace ToDoList.Core.Models.Services
             return true;
         }
 
+        /// <summary>
+        /// Adjusts the tags collection of a ToDo based on user input given in a DTO.
+        /// </summary>
         private static void AddTags(ToDoDto toDoDto, ToDo toDo, MainDbContext dbContext)
         {
             // Add existing and new tags.
