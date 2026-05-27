@@ -3,6 +3,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Entity;
 using System.Linq;
 using ToDoList.Core.Models.Data;
 using ToDoList.Core.Models.Data.Entities;
@@ -49,7 +50,7 @@ namespace ToDoList.Core.Models.Services
                         && toDo.Level == level)
                     .ToList();
 
-                _logger.Information("{ToDoCount} ToDos retrieved.", toDos.Count);
+                _logger.Information("{ToDoCount} ToDos retrieved for path {ParentPath}.", toDos.Count, parentPath);
 
                 return toDos;
             }
@@ -98,7 +99,7 @@ namespace ToDoList.Core.Models.Services
                 {
                     transaction.Rollback();
                     _logger.ForContext("ToDo", toDo)
-                        .Error(ex, "Error occurred while adding ToDo to database.");
+                        .Error(ex, "Database error occurred while adding ToDo to database.");
                     throw;
                 }
             }
@@ -113,6 +114,18 @@ namespace ToDoList.Core.Models.Services
         /// </summary>
         public Result UpdateToDo(ToDoUpdateDto toDoUpdate)
         {
+            if (toDoUpdate == null)
+            {
+                throw new ArgumentNullException(nameof(toDoUpdate), $"{nameof(toDoUpdate)} is required.");
+            }
+
+            if (string.IsNullOrEmpty(toDoUpdate.Title))
+            {
+                _logger.ForContext("ToDoUpdateDto", toDoUpdate)
+                    .Warning("Title is missing.");
+                return Result.Fail("Title is required.");
+            }
+
             ToDo toDo;
             using (var dbContext = new MainDbContext())
             {
@@ -124,7 +137,16 @@ namespace ToDoList.Core.Models.Services
                 toDo.Update(toDoUpdate);
                 AddTags(toDoUpdate, toDo, dbContext);
 
-                dbContext.SaveChanges();
+                try
+                {
+                    dbContext.SaveChanges();
+                }
+                catch (DataException ex)
+                {
+                    _logger.ForContext("ToDo", toDo)
+                        .Error(ex, "Database error occurred while updating ToDo.");
+                    throw;
+                }
             }
 
             _logger.ForContext("ToDo", toDo)
@@ -146,13 +168,13 @@ namespace ToDoList.Core.Models.Services
                 }
 
                 toDo.IsDeleted = true;
-                List<ToDo> descendants = GetAllDescendants(toDo);
+                List<ToDo> descendants = GetAllDescendants(toDo, dbContext);
                 descendants.ForEach(descendant => descendant.IsDeleted = true);
 
-                _logger.ForContext("ToDo", toDo)
-                    .Debug("{DescendantCount} descendants deleted.", descendants.Count);
-
                 dbContext.SaveChanges();
+
+                _logger.ForContext("ToDo", toDo)
+                    .Information("{DescendantCount} descendants deleted.", descendants.Count);
             }
 
             _logger.ForContext("ToDo", toDo)
@@ -175,14 +197,25 @@ namespace ToDoList.Core.Models.Services
                 toDo.Level = newParentMaterializedPath.Count(c => c == '/');
 
                 // The materialized parentPath of all descendants will change.
-                List<ToDo> descendants = GetAllDescendants(toDo);
+                List<ToDo> descendants = GetAllDescendants(toDo, dbContext);
                 descendants.ForEach(descendant =>
                 {
                     descendant.MaterializedPath.Replace(oldPath, toDo.MaterializedPath);
                 });
 
+                try
+                {
+                    dbContext.SaveChanges();
+                }
+                catch (DataException ex)
+                {
+                    _logger.ForContext("ToDo", toDo)
+                        .Error(ex, "Database error occurred while moving ToDo.");
+                    throw;
+                }
+
                 _logger.ForContext("ToDo", toDo)
-                    .Debug("MaterializedPath of {DescendantCount} descendants changed.", descendants.Count);
+                    .Debug("MaterializedPath of {DescendantCount} descendants changed during move.", descendants.Count);
             }
 
             _logger.ForContext("ToDo", toDo)
@@ -193,22 +226,22 @@ namespace ToDoList.Core.Models.Services
         /// <summary>
         /// Returns all ToDos contained in a given ToDo.
         /// </summary>
-        private List<ToDo> GetAllDescendants(ToDo toDo)
+        private List<ToDo> GetAllDescendants(ToDo toDo, MainDbContext dbContext)
         {
-            using (var dbContext = new MainDbContext())
-            {
-                return dbContext.ToDos
-                    .Where(t => t.MaterializedPath.StartsWith(toDo.MaterializedPath))
-                    .ToList();
-            }
+            return dbContext.ToDos
+                .Where(t => t.MaterializedPath.StartsWith(toDo.MaterializedPath)
+                    && t.Level > toDo.Level)
+                .ToList();
         }
 
         private bool TryFindToDo(int id, MainDbContext dbContext, out ToDo toDo)
         {
-            toDo = dbContext.ToDos.Find(id);
+            toDo = dbContext.ToDos
+                .Include(t => t.Tags)
+                .FirstOrDefault(t => t.Id == id);
             if (toDo == null)
             {
-                _logger.Error("No ToDo found with that ID.");
+                _logger.Warning("No ToDo found with that ID.");
                 return false;
             }
 
@@ -218,14 +251,25 @@ namespace ToDoList.Core.Models.Services
         private static void AddTags(ToDoDto toDoDto, ToDo toDo, MainDbContext dbContext)
         {
             // Add existing and new tags.
-            // Finds existing tags from the database and adds them.
+            // Finds existing tags in the database (not in ToDo) and adds them to the ToDo.
             // New tags are new'd up so they will be created.
-            toDo.Tags = new List<Tag>();
-
             Dictionary<string, Tag> existingTags = dbContext.Tags
                 .Where(tag => toDoDto.Tags.Contains(tag.Name))
                 .ToDictionary(tag => tag.Name);
 
+            if (toDo.Tags != null)
+            {
+                // ToDo tags are cleared so that EF6 marks everything as not related at first.
+                // This is not the most performant approach,
+                // but since a high amount of tags is unlikely, and this code is more readable, it is ok.
+                toDo.Tags.Clear();
+            }
+            else
+            {
+                toDo.Tags = new List<Tag>();
+            }
+
+            // All tags will be freshly assigned.
             foreach (string tagName in toDoDto.Tags)
             {
                 toDo.Tags.Add(
