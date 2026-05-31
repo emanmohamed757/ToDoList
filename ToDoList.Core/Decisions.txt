@@ -1,1 +1,2 @@
 * Decided to remove Notebook entity because a ToDo can act as a notebook by containing sub ToDos.
+* Decided to have the client make a conscious decision to move all descendants up a level before the parent is moved inside a descendant.

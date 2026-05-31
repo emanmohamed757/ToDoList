@@ -220,8 +220,8 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="MessageHandlers\AddCorrelationIdToLogContextHandler.cs" />
-    <Compile Include="MessageHandlers\AddCorrelationIdToResponseHandler.cs" />
+    <Compile Include="PipelineClasses\AddCorrelationIdToLogContextHandler.cs" />
+    <Compile Include="PipelineClasses\AddCorrelationIdToResponseHandler.cs" />
     <Compile Include="Models\Data\Migrations\202605011356064_InitialCreate.cs" />
     <Compile Include="Models\Data\Migrations\202605011356064_InitialCreate.Designer.cs">
       <DependentUpon>202605011356064_InitialCreate.cs</DependentUpon>
@@ -254,7 +254,9 @@
     <Compile Include="Models\Dtos\ToDoDto.cs" />
     <Compile Include="Models\Dtos\ToDoUpdateDto.cs" />
     <Compile Include="Models\ExtensionMethods\Mapper.cs" />
+    <Compile Include="Models\Helpers\MaterializedPathHelper.cs" />
     <Compile Include="Models\Services\ToDoService.cs" />
+    <Compile Include="PipelineClasses\SerilogExceptionLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

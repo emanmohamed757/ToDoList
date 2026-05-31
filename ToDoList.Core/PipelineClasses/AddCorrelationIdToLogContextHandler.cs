@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ToDoList.Core.MessageHandlers
+namespace ToDoList.Core.PipelineClasses
 {
     internal class AddCorrelationIdToLogContextHandler : DelegatingHandler
     {

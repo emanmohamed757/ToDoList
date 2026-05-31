@@ -1,5 +1,5 @@
 ﻿using System.Web.Http;
-using ToDoList.Core.MessageHandlers;
+using ToDoList.Core.PipelineClasses;
 
 namespace ToDoList.Core
 {
@@ -10,6 +10,8 @@ namespace ToDoList.Core
             // Web API configuration and services
             config.MessageHandlers.Add(new AddCorrelationIdToLogContextHandler());
             config.MessageHandlers.Add(new AddCorrelationIdToResponseHandler());
+
+
 
             // Web API routes
             config.MapHttpAttributeRoutes();

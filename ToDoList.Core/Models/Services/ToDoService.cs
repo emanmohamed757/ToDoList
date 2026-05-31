@@ -4,11 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
+using System.IO;
 using System.Linq;
 using ToDoList.Core.Models.Data;
 using ToDoList.Core.Models.Data.Entities;
 using ToDoList.Core.Models.Dtos;
 using ToDoList.Core.Models.ExtensionMethods;
+using ToDoList.Core.Models.Helpers;
 
 namespace ToDoList.Core.Models.Services
 {
@@ -37,14 +39,12 @@ namespace ToDoList.Core.Models.Services
         {
             if (string.IsNullOrEmpty(parentPath))
             {
-                throw new ArgumentNullException(nameof(parentPath), $"{nameof(parentPath)} is required.");
+                throw new ArgumentNullException(nameof(parentPath));
             }
 
             using (var dbContext = new MainDbContext())
             {
-                // The number of slashes in the parent path equals the level of the
-                // children due to leading and trailing slashes.
-                int level = parentPath.Count(c => c == '/');
+                int level = MaterializedPathHelper.GetLevel(parentPath) + 1;
                 List<ToDo> toDos = dbContext.ToDos
                     .Where(toDo => toDo.MaterializedPath.StartsWith(parentPath)
                         && toDo.Level == level)
@@ -64,7 +64,7 @@ namespace ToDoList.Core.Models.Services
         {
             if (toDoDto == null)
             {
-                throw new ArgumentNullException(nameof(toDoDto), $"{nameof(toDoDto)} is required.");
+                throw new ArgumentNullException(nameof(toDoDto));
             }
 
             if (string.IsNullOrEmpty(toDoDto.Title))
@@ -88,10 +88,8 @@ namespace ToDoList.Core.Models.Services
                     dbContext.SaveChanges();
 
                     // The ID is set after the first SaveChanges call and is used to build the MaterializedPath.
-                    toDo.MaterializedPath = $"{toDoDto.MaterializedPathOfParent}/{toDo.Id}/";
-                    // The number of slashes in the parent path equals the level of the
-                    // children due to leading and trailing slashes.
-                    toDo.Level = toDoDto.MaterializedPathOfParent.Count(c => c == '/');
+                    toDo.MaterializedPath = MaterializedPathHelper.BuildPath(toDoDto.MaterializedPathOfParent, toDo.Id);
+                    toDo.Level = MaterializedPathHelper.GetLevel(toDo.MaterializedPath);
                     dbContext.SaveChanges();
                     transaction.Commit();
                 }
@@ -116,7 +114,7 @@ namespace ToDoList.Core.Models.Services
         {
             if (toDoUpdate == null)
             {
-                throw new ArgumentNullException(nameof(toDoUpdate), $"{nameof(toDoUpdate)} is required.");
+                throw new ArgumentNullException(nameof(toDoUpdate));
             }
 
             if (string.IsNullOrEmpty(toDoUpdate.Title))
@@ -129,8 +127,10 @@ namespace ToDoList.Core.Models.Services
             ToDo toDo;
             using (var dbContext = new MainDbContext())
             {
-                if (!TryFindToDo(toDoUpdate.Id, dbContext, out toDo))
+                toDo = FindToDo(toDoUpdate.Id, dbContext);
+                if (toDo == null)
                 {
+                    _logger.Warning("ToDo not found during update attempt. ID: {Id}", toDoUpdate.Id);
                     return Result.Fail("No ToDo found with that ID.");
                 }
 
@@ -162,8 +162,10 @@ namespace ToDoList.Core.Models.Services
             ToDo toDo;
             using (var dbContext = new MainDbContext())
             {
-                if (!TryFindToDo(id, dbContext, out toDo))
+                toDo = FindToDo(id, dbContext);
+                if (toDo == null)
                 {
+                    _logger.Warning("ToDo not found during delete attempt. ID: {Id}", id);
                     return Result.Fail("No ToDo found with that ID.");
                 }
 
@@ -193,20 +195,23 @@ namespace ToDoList.Core.Models.Services
         {
             if (string.IsNullOrEmpty(newParentMaterializedPath))
             {
-                throw new ArgumentNullException(nameof(newParentMaterializedPath), $"{nameof(newParentMaterializedPath)} is required.");
+                throw new ArgumentNullException(nameof(newParentMaterializedPath));
             }
 
             ToDo toDo;
             using (var dbContext = new MainDbContext())
             {
-                if (!TryFindToDo(toDoBeingMovedId, dbContext, out toDo))
+                toDo = FindToDo(toDoBeingMovedId, dbContext);
+                if (toDo == null)
                 {
+                    _logger.Warning("ToDo not found during move attempt. ID: {Id}", toDoBeingMovedId);
                     return Result.Fail("No ToDo found with that ID.");
                 }
 
-                if (newParentMaterializedPath.StartsWith(toDo.MaterializedPath))
+                if (MaterializedPathHelper.IsDescendantOf(newParentMaterializedPath, toDo.MaterializedPath))
                 {
-                    return Result.Fail("You cannot move a ToDo into one of its own descendants.");
+                    return Result.Fail("You cannot move a ToDo into one of its own descendants. " +
+                        "Move the descendant to this ToDo's parent before you move this ToDo into it.");
                 }
 
                 string oldPath = toDo.MaterializedPath;
@@ -214,14 +219,14 @@ namespace ToDoList.Core.Models.Services
                 // The materialized parentPath of all descendants will change. Make sure to get descendants before the path changes.
                 List<ToDo> descendants = GetAllDescendants(toDo, dbContext);
 
-                toDo.MaterializedPath = $"{newParentMaterializedPath}/{toDo.Id}/";
-                toDo.Level = newParentMaterializedPath.Count(c => c == '/');
+                toDo.MaterializedPath = MaterializedPathHelper.BuildPath(newParentMaterializedPath, toDo.Id);
+                toDo.Level = MaterializedPathHelper.GetLevel(toDo.MaterializedPath);
 
-                int levelDelta = toDo.Level - oldLevel; // difference between new and old level
+                int levelDelta = toDo.Level - oldLevel; // Difference between new and old level.
                 descendants.ForEach(descendant =>
                 {
                     descendant.MaterializedPath = descendant.MaterializedPath.Replace(oldPath, toDo.MaterializedPath);
-                    descendant.Level += levelDelta; // this line is missing
+                    descendant.Level += levelDelta;
                 });
 
                 try
@@ -256,21 +261,14 @@ namespace ToDoList.Core.Models.Services
         }
 
         /// <summary>
-        /// Finds a ToDo from the database and if not found, logs it.
+        /// Finds a ToDo from the database.
         /// </summary>
         /// <returns>true if found, otherwise false.</returns>
-        private bool TryFindToDo(int id, MainDbContext dbContext, out ToDo toDo)
+        private ToDo FindToDo(int id, MainDbContext dbContext)
         {
-            toDo = dbContext.ToDos
+            return dbContext.ToDos
                 .Include(t => t.Tags)
                 .FirstOrDefault(t => t.Id == id);
-            if (toDo == null)
-            {
-                _logger.Warning("No ToDo found with that ID.");
-                return false;
-            }
-
-            return true;
         }
 
         /// <summary>
