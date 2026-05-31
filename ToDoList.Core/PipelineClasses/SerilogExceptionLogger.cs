@@ -1,13 +1,10 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using System.Web.Http.ExceptionHandling;
-using Serilog;
+﻿using System.Web.Http.ExceptionHandling;
 
 namespace ToDoList.Core.PipelineClasses
 {
     public class SerilogExceptionLogger : ExceptionLogger
     {
-        public async override Task LogAsync(ExceptionLoggerContext context, CancellationToken cancellationToken)
+        public override void Log(ExceptionLoggerContext context)
         {
             Serilog.Log.Logger.Error(context.Exception, "Unhandled exception");
         }

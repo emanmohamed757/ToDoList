@@ -256,6 +256,7 @@
     <Compile Include="Models\ExtensionMethods\Mapper.cs" />
     <Compile Include="Models\Helpers\MaterializedPathHelper.cs" />
     <Compile Include="Models\Services\ToDoService.cs" />
+    <Compile Include="PipelineClasses\GlobalExceptionHandler.cs" />
     <Compile Include="PipelineClasses\SerilogExceptionLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
